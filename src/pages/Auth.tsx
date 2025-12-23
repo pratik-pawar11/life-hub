@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,29 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, LayoutDashboard, ListTodo, DollarSign } from 'lucide-react';
+import { Loader2, LayoutDashboard, ListTodo, DollarSign } from 'lucide-react';
 import { z } from 'zod';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { PasswordStrengthChecklist, checkPasswordStrength } from '@/components/auth/PasswordStrengthChecklist';
 
-const authSchema = z.object({
+const signInSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  displayName: z.string().min(2, 'Display name must be at least 2 characters').optional(),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const signUpSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+    .regex(/[a-z]/, 'Password must contain a lowercase letter')
+    .regex(/[0-9]/, 'Password must contain a number')
+    .regex(/[!@#$%^&*]/, 'Password must contain a special character (!@#$%^&*)'),
+  confirmPassword: z.string(),
+  displayName: z.string().min(2, 'Display name must be at least 2 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
 
 export function AuthPage() {
@@ -24,8 +40,29 @@ export function AuthPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string; displayName?: string }>({});
+  const [errors, setErrors] = useState<{ 
+    email?: string; 
+    password?: string; 
+    confirmPassword?: string;
+    displayName?: string;
+  }>({});
+
+  // Check if signup form is valid
+  const isSignUpValid = useMemo(() => {
+    const passwordStrong = checkPasswordStrength(password);
+    const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+    const emailValid = z.string().email().safeParse(email).success;
+    const displayNameValid = displayName.length >= 2;
+    return passwordStrong && passwordsMatch && emailValid && displayNameValid;
+  }, [password, confirmPassword, email, displayName]);
+
+  // Real-time password match validation
+  const passwordMismatch = useMemo(() => {
+    if (confirmPassword.length === 0) return false;
+    return password !== confirmPassword;
+  }, [password, confirmPassword]);
 
   if (loading) {
     return (
@@ -39,18 +76,33 @@ export function AuthPage() {
     return <Navigate to="/" replace />;
   }
 
-  const validateForm = (isSignUp: boolean) => {
+  const validateSignIn = () => {
     try {
-      authSchema.parse({
-        email,
-        password,
-        displayName: isSignUp ? displayName : undefined,
-      });
+      signInSchema.parse({ email, password });
       setErrors({});
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const fieldErrors: { email?: string; password?: string; displayName?: string } = {};
+        const fieldErrors: typeof errors = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof typeof fieldErrors] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
+  };
+
+  const validateSignUp = () => {
+    try {
+      signUpSchema.parse({ email, password, confirmPassword, displayName });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: typeof errors = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
             fieldErrors[err.path[0] as keyof typeof fieldErrors] = err.message;
@@ -64,7 +116,7 @@ export function AuthPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm(false)) return;
+    if (!validateSignIn()) return;
     
     setIsSubmitting(true);
     const { error } = await signIn(email, password);
@@ -83,7 +135,7 @@ export function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm(true)) return;
+    if (!validateSignUp()) return;
     
     setIsSubmitting(true);
     const { error } = await signUp(email, password, displayName);
@@ -186,13 +238,10 @@ export function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="signin-password"
-                      type="password"
-                      placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input-glass"
+                      onChange={setPassword}
                       disabled={isSubmitting}
                     />
                     {errors.password && (
@@ -246,20 +295,33 @@ export function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input-glass"
+                      onChange={setPassword}
                       disabled={isSubmitting}
                     />
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                    <PasswordStrengthChecklist password={password} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                    <PasswordInput
+                      id="signup-confirm-password"
+                      value={confirmPassword}
+                      onChange={setConfirmPassword}
+                      disabled={isSubmitting}
+                      hasError={passwordMismatch}
+                    />
+                    {passwordMismatch && (
+                      <p className="text-sm text-destructive">Passwords don't match</p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting || !isSignUpValid}
+                    title={!isSignUpValid ? 'Please complete all password requirements and ensure passwords match' : undefined}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -269,6 +331,11 @@ export function AuthPage() {
                       'Create Account'
                     )}
                   </Button>
+                  {!isSignUpValid && password.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Complete all requirements above to create your account
+                    </p>
+                  )}
                 </form>
               </TabsContent>
             </Tabs>
