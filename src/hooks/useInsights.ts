@@ -6,6 +6,7 @@ export interface Insight {
   message: string;
   type: 'expense' | 'task' | 'budget';
   priority: 'info' | 'warning' | 'success';
+  amounts?: number[];
 }
 
 export function useInsights() {

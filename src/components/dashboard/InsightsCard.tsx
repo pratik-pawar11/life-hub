@@ -1,4 +1,5 @@
 import { useInsights, Insight } from '@/hooks/useInsights';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
@@ -6,6 +7,18 @@ import { cn } from '@/lib/utils';
 
 export function InsightsCard() {
   const { insights, isLoading, refetch } = useInsights();
+  const { formatAmount } = useCurrency();
+
+  const formatMessage = (insight: Insight) => {
+    let msg = insight.message;
+    if (insight.amounts) {
+      insight.amounts.forEach((amount, index) => {
+        msg = msg.replace(`{amount${index}}`, formatAmount(amount));
+        msg = msg.replace(`{amount}`, formatAmount(amount));
+      });
+    }
+    return msg;
+  };
 
   const getIcon = (insight: Insight) => {
     if (insight.priority === 'warning') return <AlertTriangle className="h-4 w-4 text-amber-500" />;
@@ -72,7 +85,7 @@ export function InsightsCard() {
               )}
             >
               <div className="mt-0.5">{getIcon(insight)}</div>
-              <p className="text-sm">{insight.message}</p>
+              <p className="text-sm">{formatMessage(insight)}</p>
             </div>
           ))
         )}
