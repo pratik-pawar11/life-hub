@@ -1,12 +1,15 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Expense } from '@/types';
 import { useMemo } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ExpenseTrendChartProps {
   expenses: Expense[];
 }
 
 export function ExpenseTrendChart({ expenses }: ExpenseTrendChartProps) {
+  const { formatAmount } = useCurrency();
+  
   const chartData = useMemo(() => {
     const expensesByDate = expenses.reduce((acc, expense) => {
       const date = expense.date;
@@ -27,7 +30,7 @@ export function ExpenseTrendChart({ expenses }: ExpenseTrendChartProps) {
       return (
         <div className="glass-card px-3 py-2 text-sm">
           <p className="font-medium text-foreground">{label}</p>
-          <p className="text-muted-foreground">${payload[0].value.toFixed(2)}</p>
+          <p className="text-muted-foreground">{formatAmount(payload[0].value)}</p>
         </div>
       );
     }
@@ -59,7 +62,7 @@ export function ExpenseTrendChart({ expenses }: ExpenseTrendChartProps) {
                 stroke="hsl(var(--muted-foreground))" 
                 fontSize={12}
                 tickLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => formatAmount(value)}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
