@@ -8,6 +8,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SidebarQuickSettings } from './SidebarQuickSettings';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -57,6 +58,11 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Quick Settings */}
+        <div className="border-t border-border px-3 py-4">
+          <SidebarQuickSettings />
+        </div>
 
         {/* Footer */}
         <div className="border-t border-border p-3">
