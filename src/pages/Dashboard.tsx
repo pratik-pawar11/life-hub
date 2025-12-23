@@ -5,7 +5,6 @@ import { ExpenseChart } from '@/components/dashboard/ExpenseChart';
 import { EmailVerificationBanner } from '@/components/dashboard/EmailVerificationBanner';
 import { InsightsCard } from '@/components/dashboard/InsightsCard';
 import { BudgetAlertsCard } from '@/components/dashboard/BudgetAlertsCard';
-import { QuickSettingsCard } from '@/components/dashboard/QuickSettingsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,11 +77,10 @@ export function Dashboard() {
           />
         </div>
 
-        {/* Insights, Budget Alerts, and Quick Settings */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Insights and Budget Alerts */}
+        <div className="grid gap-6 lg:grid-cols-2">
           <InsightsCard />
           <BudgetAlertsCard />
-          <QuickSettingsCard />
         </div>
 
         {/* Charts and Tasks */}
