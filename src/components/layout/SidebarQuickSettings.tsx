@@ -37,9 +37,13 @@ export function SidebarQuickSettings() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLimit, setEditLimit] = useState('');
   const [isConverting, setIsConverting] = useState(false);
+  const [pendingCurrency, setPendingCurrency] = useState<Currency | null>(null);
+  const [showConversionDialog, setShowConversionDialog] = useState(false);
 
   const existingCategories = budgets?.map(b => b.category) || [];
   const availableCategories = CATEGORIES.filter(c => !existingCategories.includes(c));
+
+  const totalItemsToConvert = (budgets?.length || 0) + (expenses?.length || 0);
 
   const handleAddBudget = () => {
     if (newCategory && newLimit) {
@@ -82,16 +86,30 @@ export function SidebarQuickSettings() {
     return amount;
   };
 
-  const handleCurrencyChange = async (newCurrency: Currency) => {
+  const handleCurrencySelect = (newCurrency: Currency) => {
     if (newCurrency === currency) return;
     
+    // If there are items to convert, show confirmation dialog
+    if (totalItemsToConvert > 0) {
+      setPendingCurrency(newCurrency);
+      setShowConversionDialog(true);
+    } else {
+      // No items to convert, just change currency
+      setCurrency(newCurrency);
+    }
+  };
+
+  const handleConfirmConversion = async () => {
+    if (!pendingCurrency) return;
+    
+    setShowConversionDialog(false);
     setIsConverting(true);
     
     try {
       // Convert all budget limits
       if (budgets && budgets.length > 0) {
         for (const budget of budgets) {
-          const convertedAmount = convertAmount(budget.monthly_limit, currency, newCurrency);
+          const convertedAmount = convertAmount(budget.monthly_limit, currency, pendingCurrency);
           updateBudget.mutate({ id: budget.id, monthly_limit: Math.round(convertedAmount * 100) / 100 });
         }
       }
@@ -99,16 +117,16 @@ export function SidebarQuickSettings() {
       // Convert all expense amounts
       if (expenses && expenses.length > 0) {
         for (const expense of expenses) {
-          const convertedAmount = convertAmount(Number(expense.amount), currency, newCurrency);
+          const convertedAmount = convertAmount(Number(expense.amount), currency, pendingCurrency);
           updateExpense.mutate({ id: expense.id, amount: Math.round(convertedAmount * 100) / 100 });
         }
       }
 
-      setCurrency(newCurrency);
+      setCurrency(pendingCurrency);
       
       toast({
         title: 'Currency converted',
-        description: `All amounts have been converted to ${newCurrency}.`,
+        description: `All amounts have been converted to ${pendingCurrency}.`,
       });
     } catch (error) {
       toast({
@@ -118,15 +136,47 @@ export function SidebarQuickSettings() {
       });
     } finally {
       setIsConverting(false);
+      setPendingCurrency(null);
     }
   };
 
+  const handleCancelConversion = () => {
+    setShowConversionDialog(false);
+    setPendingCurrency(null);
+  };
+
+  const getCurrencySymbol = (curr: Currency) => curr === 'INR' ? '₹' : '$';
+
   return (
     <div className="space-y-4">
+      {/* Currency Conversion Confirmation Dialog */}
+      <AlertDialog open={showConversionDialog} onOpenChange={setShowConversionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Convert All Amounts?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                You are about to convert all amounts from {getCurrencySymbol(currency)} {currency} to {getCurrencySymbol(pendingCurrency || 'USD')} {pendingCurrency}.
+              </p>
+              <p className="font-medium">
+                This will update {budgets?.length || 0} budget(s) and {expenses?.length || 0} expense(s).
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Conversion rate: 1 USD = {CONVERSION_RATE} INR
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelConversion}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmConversion}>Convert All</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Currency Setting */}
       <div className="space-y-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</span>
-        <Select value={currency} onValueChange={handleCurrencyChange} disabled={isConverting}>
+        <Select value={currency} onValueChange={handleCurrencySelect} disabled={isConverting}>
           <SelectTrigger className="w-full h-9 bg-sidebar-accent/50">
             {isConverting ? (
               <div className="flex items-center gap-2">
