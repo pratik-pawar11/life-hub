@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          monthly_limit: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          monthly_limit: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          monthly_limit?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -21,7 +48,11 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          is_recurring: boolean
           notes: string | null
+          parent_id: string | null
+          recurrence_end_date: string | null
+          recurrence_type: string | null
           updated_at: string
           user_id: string
         }
@@ -31,7 +62,11 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          is_recurring?: boolean
           notes?: string | null
+          parent_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -41,11 +76,23 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          is_recurring?: boolean
           notes?: string | null
+          parent_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -77,6 +124,10 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          is_recurring: boolean
+          parent_id: string | null
+          recurrence_end_date: string | null
+          recurrence_type: string | null
           status: string
           title: string
           updated_at: string
@@ -87,6 +138,10 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_recurring?: boolean
+          parent_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -97,12 +152,24 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_recurring?: boolean
+          parent_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           status?: string
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_preferences: {
         Row: {

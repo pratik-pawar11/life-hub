@@ -3,6 +3,8 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { RecentTasks } from '@/components/dashboard/RecentTasks';
 import { ExpenseChart } from '@/components/dashboard/ExpenseChart';
 import { EmailVerificationBanner } from '@/components/dashboard/EmailVerificationBanner';
+import { InsightsCard } from '@/components/dashboard/InsightsCard';
+import { BudgetAlertsCard } from '@/components/dashboard/BudgetAlertsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { CheckSquare, Clock, Wallet, TrendingUp, Loader2 } from 'lucide-react';
@@ -67,6 +69,12 @@ export function Dashboard() {
             icon={<Wallet className="h-5 w-5" />}
             delay={150}
           />
+        </div>
+
+        {/* Insights and Budget Alerts */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <InsightsCard />
+          <BudgetAlertsCard />
         </div>
 
         {/* Charts and Tasks */}

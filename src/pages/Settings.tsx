@@ -12,7 +12,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useExpenses } from '@/hooks/useExpenses';
 import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
-import { 
+import { BudgetSettings } from '@/components/settings/BudgetSettings';
+import {
   User, 
   Lock, 
   Mail, 
@@ -455,6 +456,9 @@ export function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Budget Settings */}
+        <BudgetSettings />
 
         {/* Export Settings */}
         <Card className="glass-card">

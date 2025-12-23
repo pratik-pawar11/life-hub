@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,12 +28,17 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div>
+      <div className="flex h-16 items-center justify-between px-6 gap-4">
+        <div className="flex-shrink-0">
           <h1 className="text-xl font-semibold text-foreground">{title}</h1>
           {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <p className="text-sm text-muted-foreground hidden sm:block">{subtitle}</p>
           )}
+        </div>
+
+        {/* Global Search */}
+        <div className="flex-1 max-w-md hidden md:block">
+          <GlobalSearch />
         </div>
 
         <div className="flex items-center gap-2">
