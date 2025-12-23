@@ -6,6 +6,7 @@ import { ExpensesPage } from './Expenses';
 import { AnalyticsPage } from './Analytics';
 import { SettingsPage } from './Settings';
 import { AuthPage } from './Auth';
+import { ResetPasswordPage } from './ResetPassword';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
@@ -23,6 +24,7 @@ const Index = () => {
     return (
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     );
@@ -35,6 +37,7 @@ const Index = () => {
       <Route path="/expenses" element={<ExpensesPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/auth" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
