@@ -7,11 +7,15 @@ import { InsightsCard } from '@/components/dashboard/InsightsCard';
 import { BudgetAlertsCard } from '@/components/dashboard/BudgetAlertsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useAuth } from '@/hooks/useAuth';
 import { CheckSquare, Clock, Wallet, TrendingUp, Loader2 } from 'lucide-react';
 
 export function Dashboard() {
+  const { user } = useAuth();
   const { tasks, isLoading: tasksLoading } = useTasks();
   const { expenses, isLoading: expensesLoading } = useExpenses();
+
+  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
 
   const isLoading = tasksLoading || expensesLoading;
 
@@ -30,7 +34,7 @@ export function Dashboard() {
 
   if (isLoading) {
     return (
-      <Layout title="Dashboard" subtitle="Welcome back! Here's your overview.">
+      <Layout title="Dashboard" subtitle={`Welcome back, ${displayName}! Here's your overview.`}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -39,7 +43,7 @@ export function Dashboard() {
   }
 
   return (
-    <Layout title="Dashboard" subtitle="Welcome back! Here's your overview.">
+    <Layout title="Dashboard" subtitle={`Welcome back, ${displayName}! Here's your overview.`}>
       <EmailVerificationBanner />
       <div className="space-y-6">
         {/* Stats Grid */}
