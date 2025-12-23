@@ -8,12 +8,14 @@ import { BudgetAlertsCard } from '@/components/dashboard/BudgetAlertsCard';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { CheckSquare, Clock, Wallet, TrendingUp, Loader2 } from 'lucide-react';
 
 export function Dashboard() {
   const { user } = useAuth();
   const { tasks, isLoading: tasksLoading } = useTasks();
   const { expenses, isLoading: expensesLoading } = useExpenses();
+  const { formatAmount } = useCurrency();
 
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
 
@@ -69,7 +71,7 @@ export function Dashboard() {
           />
           <StatCard
             title="This Month"
-            value={`$${thisMonthExpenses.toFixed(2)}`}
+            value={formatAmount(thisMonthExpenses)}
             icon={<Wallet className="h-5 w-5" />}
             delay={150}
           />
