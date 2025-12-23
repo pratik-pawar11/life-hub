@@ -45,7 +45,7 @@ export function Dashboard() {
   }
 
   return (
-    <Layout title="Dashboard" subtitle={`Welcome back, ${displayName}! Here's your overview.`}>
+    <Layout title="Dashboard" subtitle={<>Welcome back, <span className="font-bold">{displayName}</span>! Here's your overview.</>}>
       <EmailVerificationBanner />
       <div className="space-y-6">
         {/* Stats Grid */}
