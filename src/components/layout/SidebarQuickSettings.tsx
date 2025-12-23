@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useBudgets } from '@/hooks/useBudgets';
+import { useExpenses } from '@/hooks/useExpenses';
 import { Currency } from '@/hooks/useUserPreferences';
 import { Plus, Loader2, Pencil, Trash2, Check, X } from 'lucide-react';
 import { useState } from 'react';
@@ -18,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Healthcare', 'Education', 'Other'];
 
@@ -27,11 +29,14 @@ const CONVERSION_RATE = 83;
 export function SidebarQuickSettings() {
   const { currency, setCurrency, formatAmount } = useCurrency();
   const { budgets, isLoading, addBudget, updateBudget, deleteBudget } = useBudgets();
+  const { expenses, updateExpense } = useExpenses();
+  const { toast } = useToast();
   const [isAddingBudget, setIsAddingBudget] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [newLimit, setNewLimit] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLimit, setEditLimit] = useState('');
+  const [isConverting, setIsConverting] = useState(false);
 
   const existingCategories = budgets?.map(b => b.category) || [];
   const availableCategories = CATEGORIES.filter(c => !existingCategories.includes(c));
@@ -67,24 +72,53 @@ export function SidebarQuickSettings() {
     deleteBudget.mutate(id);
   };
 
-  const handleCurrencyChange = (newCurrency: Currency) => {
-    if (newCurrency !== currency && budgets && budgets.length > 0) {
-      // Convert all budget limits when currency changes
-      budgets.forEach(budget => {
-        let convertedAmount: number;
-        if (newCurrency === 'INR' && currency === 'USD') {
-          // USD to INR
-          convertedAmount = budget.monthly_limit * CONVERSION_RATE;
-        } else if (newCurrency === 'USD' && currency === 'INR') {
-          // INR to USD
-          convertedAmount = budget.monthly_limit / CONVERSION_RATE;
-        } else {
-          convertedAmount = budget.monthly_limit;
-        }
-        updateBudget.mutate({ id: budget.id, monthly_limit: Math.round(convertedAmount * 100) / 100 });
-      });
+  const convertAmount = (amount: number, fromCurrency: Currency, toCurrency: Currency): number => {
+    if (fromCurrency === toCurrency) return amount;
+    if (toCurrency === 'INR' && fromCurrency === 'USD') {
+      return amount * CONVERSION_RATE;
+    } else if (toCurrency === 'USD' && fromCurrency === 'INR') {
+      return amount / CONVERSION_RATE;
     }
-    setCurrency(newCurrency);
+    return amount;
+  };
+
+  const handleCurrencyChange = async (newCurrency: Currency) => {
+    if (newCurrency === currency) return;
+    
+    setIsConverting(true);
+    
+    try {
+      // Convert all budget limits
+      if (budgets && budgets.length > 0) {
+        for (const budget of budgets) {
+          const convertedAmount = convertAmount(budget.monthly_limit, currency, newCurrency);
+          updateBudget.mutate({ id: budget.id, monthly_limit: Math.round(convertedAmount * 100) / 100 });
+        }
+      }
+
+      // Convert all expense amounts
+      if (expenses && expenses.length > 0) {
+        for (const expense of expenses) {
+          const convertedAmount = convertAmount(Number(expense.amount), currency, newCurrency);
+          updateExpense.mutate({ id: expense.id, amount: Math.round(convertedAmount * 100) / 100 });
+        }
+      }
+
+      setCurrency(newCurrency);
+      
+      toast({
+        title: 'Currency converted',
+        description: `All amounts have been converted to ${newCurrency}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Conversion error',
+        description: 'Failed to convert some amounts.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   return (
@@ -92,9 +126,16 @@ export function SidebarQuickSettings() {
       {/* Currency Setting */}
       <div className="space-y-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</span>
-        <Select value={currency} onValueChange={handleCurrencyChange}>
+        <Select value={currency} onValueChange={handleCurrencyChange} disabled={isConverting}>
           <SelectTrigger className="w-full h-9 bg-sidebar-accent/50">
-            <SelectValue />
+            {isConverting ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Converting...</span>
+              </div>
+            ) : (
+              <SelectValue />
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="INR">₹ INR</SelectItem>
