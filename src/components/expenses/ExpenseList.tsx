@@ -2,6 +2,7 @@ import { Expense } from '@/hooks/useExpenses';
 import { categoryColors, categoryLabels } from '@/lib/data';
 import { Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -10,6 +11,8 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({ expenses, onEdit, onDelete }: ExpenseListProps) {
+  const { formatAmount } = useCurrency();
+
   return (
     <div className="space-y-3">
       {expenses.map((expense, index) => (
@@ -57,7 +60,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }: ExpenseListProps) {
             </div>
 
             <p className="text-lg font-semibold text-foreground">
-              ${Number(expense.amount).toFixed(2)}
+              {formatAmount(Number(expense.amount))}
             </p>
 
             <div className="flex items-center gap-1">

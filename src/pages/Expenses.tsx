@@ -7,6 +7,7 @@ import { ExpenseCategory } from '@/types';
 import { categoryLabels } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ const categories: ExpenseCategory[] = ['Food', 'Travel', 'Rent', 'Shopping', 'Ot
 
 export function ExpensesPage() {
   const { expenses, isLoading, addExpense, updateExpense, deleteExpense } = useExpenses();
+  const { formatAmount } = useCurrency();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,7 +82,7 @@ export function ExpensesPage() {
                 {categoryFilter === 'all' ? 'Total Expenses' : `${categoryLabels[categoryFilter as ExpenseCategory]} Expenses`}
               </p>
               <p className="text-3xl font-bold gradient-text">
-                ${totalFiltered.toFixed(2)}
+                {formatAmount(totalFiltered)}
               </p>
             </div>
             <p className="text-sm text-muted-foreground">
