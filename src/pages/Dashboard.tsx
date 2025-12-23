@@ -2,6 +2,7 @@ import { Layout } from '@/components/layout/Layout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { RecentTasks } from '@/components/dashboard/RecentTasks';
 import { ExpenseChart } from '@/components/dashboard/ExpenseChart';
+import { EmailVerificationBanner } from '@/components/dashboard/EmailVerificationBanner';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { CheckSquare, Clock, Wallet, TrendingUp, Loader2 } from 'lucide-react';
@@ -37,6 +38,7 @@ export function Dashboard() {
 
   return (
     <Layout title="Dashboard" subtitle="Welcome back! Here's your overview.">
+      <EmailVerificationBanner />
       <div className="space-y-6">
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
