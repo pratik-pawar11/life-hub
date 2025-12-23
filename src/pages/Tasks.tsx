@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { TaskList } from '@/components/tasks/TaskList';
 import { TaskForm } from '@/components/tasks/TaskForm';
-import { Task, TaskStatus } from '@/types';
+import { useTasks, Task } from '@/hooks/useTasks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,17 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Loader2 } from 'lucide-react';
 
-interface TasksPageProps {
-  tasks: Task[];
-  onAddTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  onUpdateTask: (id: string, task: Omit<Task, 'id' | 'createdAt'>) => void;
-  onDeleteTask: (id: string) => void;
-  onStatusChange: (id: string, status: TaskStatus) => void;
-}
-
-export function TasksPage({ tasks, onAddTask, onUpdateTask, onDeleteTask, onStatusChange }: TasksPageProps) {
+export function TasksPage() {
+  const { tasks, isLoading, addTask, updateTask, deleteTask, updateStatus } = useTasks();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,22 +24,26 @@ export function TasksPage({ tasks, onAddTask, onUpdateTask, onDeleteTask, onStat
   const filteredTasks = tasks
     .filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           task.description.toLowerCase().includes(searchQuery.toLowerCase());
+                           (task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    .sort((a, b) => {
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    });
 
   const handleEdit = (task: Task) => {
     setEditingTask(task);
     setIsFormOpen(true);
   };
 
-  const handleSubmit = (taskData: Omit<Task, 'id' | 'createdAt'>) => {
+  const handleSubmit = (taskData: { title: string; description: string | null; due_date: string | null; status: 'pending' | 'completed' }) => {
     if (editingTask) {
-      onUpdateTask(editingTask.id, taskData);
+      updateTask.mutate({ id: editingTask.id, ...taskData });
     } else {
-      onAddTask(taskData);
+      addTask.mutate(taskData);
     }
     setEditingTask(null);
   };
@@ -55,6 +52,24 @@ export function TasksPage({ tasks, onAddTask, onUpdateTask, onDeleteTask, onStat
     setIsFormOpen(open);
     if (!open) setEditingTask(null);
   };
+
+  const handleDelete = (id: string) => {
+    deleteTask.mutate(id);
+  };
+
+  const handleStatusChange = (id: string, status: 'pending' | 'completed') => {
+    updateStatus.mutate({ id, status });
+  };
+
+  if (isLoading) {
+    return (
+      <Layout title="Tasks" subtitle="Manage your tasks and stay organized">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Tasks" subtitle="Manage your tasks and stay organized">
@@ -80,7 +95,6 @@ export function TasksPage({ tasks, onAddTask, onUpdateTask, onDeleteTask, onStat
               <SelectContent>
                 <SelectItem value="all">All Tasks</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
@@ -96,8 +110,8 @@ export function TasksPage({ tasks, onAddTask, onUpdateTask, onDeleteTask, onStat
         <TaskList
           tasks={filteredTasks}
           onEdit={handleEdit}
-          onDelete={onDeleteTask}
-          onStatusChange={onStatusChange}
+          onDelete={handleDelete}
+          onStatusChange={handleStatusChange}
         />
 
         {/* Task Form Modal */}

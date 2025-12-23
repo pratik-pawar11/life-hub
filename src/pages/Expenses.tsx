@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ExpenseList } from '@/components/expenses/ExpenseList';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
-import { Expense, ExpenseCategory } from '@/types';
+import { useExpenses, Expense } from '@/hooks/useExpenses';
+import { ExpenseCategory } from '@/types';
 import { categoryLabels } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,18 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Loader2 } from 'lucide-react';
 
-interface ExpensesPageProps {
-  expenses: Expense[];
-  onAddExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
-  onUpdateExpense: (id: string, expense: Omit<Expense, 'id' | 'createdAt'>) => void;
-  onDeleteExpense: (id: string) => void;
-}
+const categories: ExpenseCategory[] = ['Food', 'Travel', 'Rent', 'Shopping', 'Others'];
 
-const categories: ExpenseCategory[] = ['food', 'travel', 'rent', 'shopping', 'entertainment', 'utilities', 'other'];
-
-export function ExpensesPage({ expenses, onAddExpense, onUpdateExpense, onDeleteExpense }: ExpensesPageProps) {
+export function ExpensesPage() {
+  const { expenses, isLoading, addExpense, updateExpense, deleteExpense } = useExpenses();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,24 +27,25 @@ export function ExpensesPage({ expenses, onAddExpense, onUpdateExpense, onDelete
 
   const filteredExpenses = expenses
     .filter(expense => {
-      const matchesSearch = expense.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = expense.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
       const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      return matchesSearch || (searchQuery === '' && matchesCategory);
     })
+    .filter(expense => categoryFilter === 'all' || expense.category === categoryFilter)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const totalFiltered = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalFiltered = filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
     setIsFormOpen(true);
   };
 
-  const handleSubmit = (expenseData: Omit<Expense, 'id' | 'createdAt'>) => {
+  const handleSubmit = (expenseData: { amount: number; category: ExpenseCategory; date: string; notes: string | null }) => {
     if (editingExpense) {
-      onUpdateExpense(editingExpense.id, expenseData);
+      updateExpense.mutate({ id: editingExpense.id, ...expenseData });
     } else {
-      onAddExpense(expenseData);
+      addExpense.mutate(expenseData);
     }
     setEditingExpense(null);
   };
@@ -58,6 +54,20 @@ export function ExpensesPage({ expenses, onAddExpense, onUpdateExpense, onDelete
     setIsFormOpen(open);
     if (!open) setEditingExpense(null);
   };
+
+  const handleDelete = (id: string) => {
+    deleteExpense.mutate(id);
+  };
+
+  if (isLoading) {
+    return (
+      <Layout title="Expenses" subtitle="Track and manage your spending">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Expenses" subtitle="Track and manage your spending">
@@ -118,7 +128,7 @@ export function ExpensesPage({ expenses, onAddExpense, onUpdateExpense, onDelete
         <ExpenseList
           expenses={filteredExpenses}
           onEdit={handleEdit}
-          onDelete={onDeleteExpense}
+          onDelete={handleDelete}
         />
 
         {/* Expense Form Modal */}

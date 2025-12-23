@@ -1,4 +1,4 @@
-import { Expense } from '@/types';
+import { Expense } from '@/hooks/useExpenses';
 import { categoryColors, categoryLabels } from '@/lib/data';
 import { Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }: ExpenseListProps) {
             </div>
 
             <p className="text-lg font-semibold text-foreground">
-              ${expense.amount.toFixed(2)}
+              ${Number(expense.amount).toFixed(2)}
             </p>
 
             <div className="flex items-center gap-1">

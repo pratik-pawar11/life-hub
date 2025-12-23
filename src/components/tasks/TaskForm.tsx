@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Task, TaskStatus } from '@/types';
+import { Task } from '@/hooks/useTasks';
+import { TaskStatus } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,7 @@ import {
 interface TaskFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (task: Omit<Task, 'id' | 'createdAt'>) => void;
+  onSubmit: (task: { title: string; description: string | null; due_date: string | null; status: TaskStatus }) => void;
   editingTask?: Task | null;
 }
 
@@ -34,8 +35,8 @@ export function TaskForm({ open, onOpenChange, onSubmit, editingTask }: TaskForm
   useEffect(() => {
     if (editingTask) {
       setTitle(editingTask.title);
-      setDescription(editingTask.description);
-      setDueDate(editingTask.dueDate);
+      setDescription(editingTask.description || '');
+      setDueDate(editingTask.due_date || '');
       setStatus(editingTask.status);
     } else {
       setTitle('');
@@ -47,12 +48,12 @@ export function TaskForm({ open, onOpenChange, onSubmit, editingTask }: TaskForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !dueDate) return;
+    if (!title.trim()) return;
     
     onSubmit({
       title: title.trim(),
-      description: description.trim(),
-      dueDate,
+      description: description.trim() || null,
+      due_date: dueDate || null,
       status,
     });
     
@@ -100,7 +101,6 @@ export function TaskForm({ open, onOpenChange, onSubmit, editingTask }: TaskForm
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                required
               />
             </div>
 
@@ -112,7 +112,6 @@ export function TaskForm({ open, onOpenChange, onSubmit, editingTask }: TaskForm
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>

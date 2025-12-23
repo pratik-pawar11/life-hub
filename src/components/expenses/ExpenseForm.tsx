@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Expense, ExpenseCategory } from '@/types';
+import { Expense } from '@/hooks/useExpenses';
+import { ExpenseCategory } from '@/types';
 import { categoryLabels } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,15 +23,15 @@ import {
 interface ExpenseFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
+  onSubmit: (expense: { amount: number; category: ExpenseCategory; date: string; notes: string | null }) => void;
   editingExpense?: Expense | null;
 }
 
-const categories: ExpenseCategory[] = ['food', 'travel', 'rent', 'shopping', 'entertainment', 'utilities', 'other'];
+const categories: ExpenseCategory[] = ['Food', 'Travel', 'Rent', 'Shopping', 'Others'];
 
 export function ExpenseForm({ open, onOpenChange, onSubmit, editingExpense }: ExpenseFormProps) {
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<ExpenseCategory>('food');
+  const [category, setCategory] = useState<ExpenseCategory>('Food');
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -39,10 +40,10 @@ export function ExpenseForm({ open, onOpenChange, onSubmit, editingExpense }: Ex
       setAmount(editingExpense.amount.toString());
       setCategory(editingExpense.category);
       setDate(editingExpense.date);
-      setNotes(editingExpense.notes);
+      setNotes(editingExpense.notes || '');
     } else {
       setAmount('');
-      setCategory('food');
+      setCategory('Food');
       setDate(new Date().toISOString().split('T')[0]);
       setNotes('');
     }
@@ -57,7 +58,7 @@ export function ExpenseForm({ open, onOpenChange, onSubmit, editingExpense }: Ex
       amount: parsedAmount,
       category,
       date,
-      notes: notes.trim(),
+      notes: notes.trim() || null,
     });
     
     onOpenChange(false);
