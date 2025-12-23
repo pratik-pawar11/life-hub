@@ -33,6 +33,7 @@ interface Insight {
   type: 'expense' | 'task' | 'budget';
   priority: 'info' | 'warning' | 'success';
   icon?: string;
+  amounts?: number[]; // Raw amounts for client-side formatting
 }
 
 serve(async (req) => {
@@ -108,9 +109,10 @@ serve(async (req) => {
     if (sortedCategories.length > 0) {
       const [topCategory, amount] = sortedCategories[0];
       insights.push({
-        message: `Your highest spending category this month is ${topCategory} (₹${amount.toFixed(0)})`,
+        message: `Your highest spending category this month is ${topCategory} ({amount})`,
         type: 'expense',
         priority: 'info',
+        amounts: [amount],
       });
     }
 
@@ -142,9 +144,10 @@ serve(async (req) => {
       
       if (percentage >= 100) {
         insights.push({
-          message: `⚠️ You've exceeded your ${budget.category} budget (₹${spent.toFixed(0)} / ₹${budget.monthly_limit})`,
+          message: `⚠️ You've exceeded your ${budget.category} budget ({amount0} / {amount1})`,
           type: 'budget',
           priority: 'warning',
+          amounts: [spent, budget.monthly_limit],
         });
       } else if (percentage >= 80) {
         insights.push({
