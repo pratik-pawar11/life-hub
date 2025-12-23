@@ -16,11 +16,7 @@ export function useInsights() {
     queryFn: async () => {
       if (!session?.access_token) return [];
       
-      const { data, error } = await supabase.functions.invoke('generate-insights', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke('generate-insights');
 
       if (error) {
         console.error('Error fetching insights:', error);
