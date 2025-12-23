@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useExpenses } from '@/hooks/useExpenses';
+import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
 import { 
   User, 
   Lock, 
@@ -386,6 +387,9 @@ export function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Two-Factor Authentication */}
+        <TwoFactorSettings />
 
         {/* Theme Settings */}
         <Card className="glass-card">
