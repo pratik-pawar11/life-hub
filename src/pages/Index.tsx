@@ -4,6 +4,7 @@ import { Dashboard } from './Dashboard';
 import { TasksPage } from './Tasks';
 import { ExpensesPage } from './Expenses';
 import { AnalyticsPage } from './Analytics';
+import { SettingsPage } from './Settings';
 import { AuthPage } from './Auth';
 import { Loader2 } from 'lucide-react';
 
@@ -33,6 +34,7 @@ const Index = () => {
       <Route path="/tasks" element={<TasksPage />} />
       <Route path="/expenses" element={<ExpensesPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/auth" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

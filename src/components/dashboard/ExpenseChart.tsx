@@ -1,12 +1,15 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Expense, ExpenseCategory } from '@/types';
 import { categoryColors, categoryLabels } from '@/lib/data';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ExpenseChartProps {
   expenses: Expense[];
 }
 
 export function ExpenseChart({ expenses }: ExpenseChartProps) {
+  const { formatAmount } = useCurrency();
+  
   const expensesByCategory = expenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
     return acc;
@@ -26,7 +29,7 @@ export function ExpenseChart({ expenses }: ExpenseChartProps) {
         <div className="glass-card px-3 py-2 text-sm">
           <p className="font-medium text-foreground">{payload[0].name}</p>
           <p className="text-muted-foreground">
-            ${payload[0].value.toFixed(2)}
+            {formatAmount(payload[0].value)}
           </p>
         </div>
       );
