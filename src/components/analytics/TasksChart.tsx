@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Task } from '@/types';
+import { Task } from '@/hooks/useTasks';
 
 interface TasksChartProps {
   tasks: Task[];
@@ -8,13 +8,11 @@ interface TasksChartProps {
 export function TasksChart({ tasks }: TasksChartProps) {
   const statusCounts = {
     completed: tasks.filter(t => t.status === 'completed').length,
-    in_progress: tasks.filter(t => t.status === 'in_progress').length,
     pending: tasks.filter(t => t.status === 'pending').length,
   };
 
   const data = [
     { name: 'Completed', value: statusCounts.completed, color: '#10B981' },
-    { name: 'In Progress', value: statusCounts.in_progress, color: '#14B8A6' },
     { name: 'Pending', value: statusCounts.pending, color: '#F59E0B' },
   ];
 
