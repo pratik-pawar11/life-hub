@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task } from '@/hooks/useTasks';
 import { statusColors, statusLabels } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Calendar, ArrowRight } from 'lucide-react';
@@ -32,15 +32,17 @@ export function RecentTasks({ tasks }: RecentTasksProps) {
           >
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground truncate">{task.title}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Calendar className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  {new Date(task.dueDate).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
-                </span>
-              </div>
+              {task.due_date && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(task.due_date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
             <span className={cn(
               "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
