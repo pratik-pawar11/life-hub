@@ -1,8 +1,9 @@
-import { Task, TaskStatus } from '@/types';
+import { Task } from '@/hooks/useTasks';
 import { statusColors, statusLabels } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Calendar, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TaskStatus } from '@/types';
 
 interface TaskListProps {
   tasks: Task[];
@@ -13,12 +14,7 @@ interface TaskListProps {
 
 export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListProps) {
   const getNextStatus = (currentStatus: TaskStatus): TaskStatus => {
-    const statusFlow: Record<TaskStatus, TaskStatus> = {
-      pending: 'in_progress',
-      in_progress: 'completed',
-      completed: 'pending',
-    };
-    return statusFlow[currentStatus];
+    return currentStatus === 'pending' ? 'completed' : 'pending';
   };
 
   return (
@@ -64,16 +60,18 @@ export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListPr
                 </p>
               )}
               
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  Due {new Date(task.dueDate).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
+              {task.due_date && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    Due {new Date(task.due_date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-1">

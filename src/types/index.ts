@@ -1,6 +1,19 @@
-export type TaskStatus = 'pending' | 'in_progress' | 'completed';
+// Task types for Supabase
+export type TaskStatus = 'pending' | 'completed';
 
 export interface Task {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: TaskStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+// For frontend display compatibility
+export interface TaskDisplay {
   id: string;
   title: string;
   description: string;
@@ -9,9 +22,22 @@ export interface Task {
   createdAt: string;
 }
 
-export type ExpenseCategory = 'food' | 'travel' | 'rent' | 'shopping' | 'entertainment' | 'utilities' | 'other';
+// Expense types for Supabase
+export type ExpenseCategory = 'Food' | 'Travel' | 'Rent' | 'Shopping' | 'Others';
 
 export interface Expense {
+  id: string;
+  user_id: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// For frontend display compatibility
+export interface ExpenseDisplay {
   id: string;
   amount: number;
   category: ExpenseCategory;
