@@ -94,6 +94,80 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          hour_before_reminder: boolean
+          id: string
+          morning_reminder: boolean
+          morning_reminder_time: string
+          overdue_alerts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hour_before_reminder?: boolean
+          id?: string
+          morning_reminder?: boolean
+          morning_reminder_time?: string
+          overdue_alerts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hour_before_reminder?: boolean
+          id?: string
+          morning_reminder?: boolean
+          morning_reminder_time?: string
+          overdue_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          task_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          task_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          task_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -120,12 +194,16 @@ export type Database = {
       }
       tasks: {
         Row: {
+          archived_at: string | null
+          category: string
           created_at: string
           description: string | null
           due_date: string | null
+          due_time: string | null
           id: string
           is_recurring: boolean
           parent_id: string | null
+          priority: string
           recurrence_end_date: string | null
           recurrence_type: string | null
           status: string
@@ -134,12 +212,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
+          category?: string
           created_at?: string
           description?: string | null
           due_date?: string | null
+          due_time?: string | null
           id?: string
           is_recurring?: boolean
           parent_id?: string | null
+          priority?: string
           recurrence_end_date?: string | null
           recurrence_type?: string | null
           status?: string
@@ -148,12 +230,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived_at?: string | null
+          category?: string
           created_at?: string
           description?: string | null
           due_date?: string | null
+          due_time?: string | null
           id?: string
           is_recurring?: boolean
           parent_id?: string | null
+          priority?: string
           recurrence_end_date?: string | null
           recurrence_type?: string | null
           status?: string

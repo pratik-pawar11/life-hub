@@ -1,4 +1,4 @@
-import { Bell, LogOut, User, Moon, Sun, Settings, KeyRound, AlertTriangle, Wallet, Clock, CheckSquare } from 'lucide-react';
+import { LogOut, User, Moon, Sun, Settings, KeyRound, AlertTriangle, Wallet, Clock, CheckSquare, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -7,6 +7,7 @@ import { GlobalSearch } from '@/components/search/GlobalSearch';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useTasks } from '@/hooks/useTasks';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import {
@@ -142,11 +143,14 @@ export function Header({ title, subtitle }: HeaderProps) {
             )}
           </Button>
 
-          {/* Notification Bell with Alerts */}
+          {/* Notification Center */}
+          <NotificationCenter />
+
+          {/* Legacy Alerts Popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative" title="Alerts">
+                <AlertTriangle className="h-5 w-5" />
                 {totalAlerts > 0 && (
                   <span className={`absolute -right-0.5 -top-0.5 h-5 w-5 rounded-full flex items-center justify-center text-xs font-medium text-primary-foreground ${hasUrgentAlerts ? 'bg-destructive' : 'bg-primary'}`}>
                     {totalAlerts}
