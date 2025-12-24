@@ -90,46 +90,60 @@ export function PivotTable({ expenses }: PivotTableProps) {
       }
     });
 
+    // Helper function to aggregate values
+    const aggregate = (values: number[]): number => {
+      if (values.length === 0) return 0;
+      switch (aggregation) {
+        case 'sum':
+          return values.reduce((a, b) => a + b, 0);
+        case 'count':
+          return values.length;
+        case 'average':
+          return values.reduce((a, b) => a + b, 0) / values.length;
+        case 'min':
+          return Math.min(...values);
+        case 'max':
+          return Math.max(...values);
+        default:
+          return 0;
+      }
+    };
+
     // Apply aggregation
     const aggregatedMatrix: Record<string, Record<string, number>> = {};
     const rowTotals: Record<string, number> = {};
     const colTotals: Record<string, number> = {};
 
+    // Calculate cell values
     rowValues.forEach(row => {
       aggregatedMatrix[row] = {};
-      let rowTotal = 0;
-      
       colValues.forEach(col => {
         const values = matrix[row][col];
-        let aggregatedValue = 0;
-        
-        if (values.length > 0) {
-          switch (aggregation) {
-            case 'sum':
-              aggregatedValue = values.reduce((a, b) => a + b, 0);
-              break;
-            case 'count':
-              aggregatedValue = values.length;
-              break;
-            case 'average':
-              aggregatedValue = values.reduce((a, b) => a + b, 0) / values.length;
-              break;
-            case 'min':
-              aggregatedValue = Math.min(...values);
-              break;
-            case 'max':
-              aggregatedValue = Math.max(...values);
-              break;
-          }
-        }
-        
-        aggregatedMatrix[row][col] = aggregatedValue;
-        rowTotal += aggregatedValue;
-        colTotals[col] = (colTotals[col] || 0) + aggregatedValue;
+        aggregatedMatrix[row][col] = aggregate(values);
       });
-      
-      rowTotals[row] = rowTotal;
     });
+
+    // Calculate row totals from all values in each row (not sum of aggregated cells)
+    rowValues.forEach(row => {
+      const allRowValues: number[] = [];
+      colValues.forEach(col => {
+        allRowValues.push(...matrix[row][col]);
+      });
+      rowTotals[row] = aggregate(allRowValues);
+    });
+
+    // Calculate column totals from all values in each column
+    colValues.forEach(col => {
+      const allColValues: number[] = [];
+      rowValues.forEach(row => {
+        allColValues.push(...matrix[row][col]);
+      });
+      colTotals[col] = aggregate(allColValues);
+    });
+
+    // Calculate grand total from all expense values
+    const allValues = expenses.map(e => Number(e.amount));
+    const grandTotal = aggregate(allValues);
 
     // Sort if needed
     let sortedRows = [...rowValues];
@@ -147,7 +161,7 @@ export function PivotTable({ expenses }: PivotTableProps) {
       data: aggregatedMatrix,
       rowTotals,
       colTotals,
-      grandTotal: Object.values(rowTotals).reduce((a, b) => a + b, 0),
+      grandTotal,
     };
   }, [expenses, rowDimension, columnDimension, aggregation, sortColumn, sortDirection]);
 
