@@ -51,6 +51,7 @@ export function BudgetPanel() {
   // Calculate totals
   const totalBudget = budgets?.reduce((sum, b) => sum + Number(b.monthly_limit), 0) || 0;
   const totalSpent = budgets?.reduce((sum, b) => sum + (spendingByCategory[b.category] || 0), 0) || 0;
+  const overallPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   const handleAddBudget = () => {
     if (newCategory && newLimit) {
@@ -101,7 +102,7 @@ export function BudgetPanel() {
 
   if (isLoading) {
     return (
-      <Card className="h-fit">
+      <Card>
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </CardContent>
@@ -110,85 +111,103 @@ export function BudgetPanel() {
   }
 
   return (
-    <Card className="h-fit sticky top-4">
-      <CardHeader className="pb-4 border-b border-border/50">
-        <div className="flex items-center justify-between">
+    <Card className="animate-slide-up">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Target className="h-5 w-5 text-primary" />
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <Target className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg">Monthly Budgets</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <CardTitle className="text-xl">Monthly Budgets</CardTitle>
+              <p className="text-sm text-muted-foreground">
                 {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </p>
             </div>
           </div>
-          {availableCategories.length > 0 && !isAddingBudget && (
-            <Button variant="outline" size="sm" onClick={() => setIsAddingBudget(true)} className="h-8">
-              <Plus className="h-4 w-4 mr-1" />
-              Add
+
+          {/* Overall Summary */}
+          {budgets && budgets.length > 0 && (
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Spent</p>
+                <p className={`text-2xl font-bold ${totalSpent > totalBudget ? 'text-destructive' : ''}`}>
+                  {formatAmount(totalSpent)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Budget</p>
+                <p className="text-2xl font-bold">{formatAmount(totalBudget)}</p>
+              </div>
+              <div className="hidden sm:block w-32">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Overall</span>
+                  <span className="font-medium">{Math.round(overallPercentage)}%</span>
+                </div>
+                <Progress value={Math.min(overallPercentage, 100)} className={`h-2 ${getProgressColor(overallPercentage)}`} />
+              </div>
+              {availableCategories.length > 0 && !isAddingBudget && (
+                <Button onClick={() => setIsAddingBudget(true)} className="shrink-0">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Budget
+                </Button>
+              )}
+            </div>
+          )}
+
+          {(!budgets || budgets.length === 0) && availableCategories.length > 0 && !isAddingBudget && (
+            <Button onClick={() => setIsAddingBudget(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget
             </Button>
           )}
         </div>
-
-        {/* Summary Stats */}
-        {budgets && budgets.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total Budget</p>
-              <p className="text-lg font-bold mt-1">{formatAmount(totalBudget)}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Spent</p>
-              <p className={`text-lg font-bold mt-1 ${totalSpent > totalBudget ? 'text-destructive' : ''}`}>
-                {formatAmount(totalSpent)}
-              </p>
-            </div>
-          </div>
-        )}
       </CardHeader>
 
-      <CardContent className="pt-4 space-y-4">
+      <CardContent className="space-y-4">
         {/* Add Budget Form */}
         {isAddingBudget && (
-          <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold">Add Budget Limit</p>
-            </div>
-            <Select value={newCategory} onValueChange={setNewCategory}>
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCategories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              placeholder="Monthly limit"
-              value={newLimit}
-              onChange={(e) => setNewLimit(e.target.value)}
-              className="bg-background"
-            />
-            <div className="flex gap-2 pt-1">
-              <Button size="sm" className="flex-1" onClick={handleAddBudget} disabled={!newCategory || !newLimit}>
-                <Check className="h-4 w-4 mr-1" />
-                Add Budget
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => { setIsAddingBudget(false); setNewCategory(''); setNewLimit(''); }}>
-                <X className="h-4 w-4" />
-              </Button>
+          <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5">
+            <div className="flex flex-col sm:flex-row gap-3 items-end">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-sm font-medium">Category</label>
+                <Select value={newCategory} onValueChange={setNewCategory}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <label className="text-sm font-medium">Monthly Limit</label>
+                <Input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={newLimit}
+                  onChange={(e) => setNewLimit(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAddBudget} disabled={!newCategory || !newLimit}>
+                  <Check className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+                <Button variant="ghost" onClick={() => { setIsAddingBudget(false); setNewCategory(''); setNewLimit(''); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Budget List */}
+        {/* Budget Grid */}
         {budgets && budgets.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {budgets.map(budget => {
               const spent = spendingByCategory[budget.category] || 0;
               const percentage = Math.min((spent / budget.monthly_limit) * 100, 100);
@@ -197,27 +216,25 @@ export function BudgetPanel() {
               return (
                 <div 
                   key={budget.id} 
-                  className="p-4 rounded-xl border bg-gradient-to-br from-card to-muted/30 hover:shadow-md transition-shadow"
+                  className="p-4 rounded-xl border bg-gradient-to-br from-card to-muted/30 hover:shadow-lg transition-all"
                 >
                   {editingId === budget.id ? (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold">{budget.category}</span>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={editLimit}
-                            onChange={(e) => setEditLimit(e.target.value)}
-                            className="h-9 w-28"
-                            autoFocus
-                          />
-                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-green-500/10" onClick={() => handleSaveEdit(budget.id)}>
-                            <Check className="h-4 w-4 text-green-500" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-destructive/10" onClick={handleCancelEdit}>
-                            <X className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                      <span className="font-semibold">{budget.category}</span>
+                      <Input
+                        type="number"
+                        value={editLimit}
+                        onChange={(e) => setEditLimit(e.target.value)}
+                        className="h-9"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" className="flex-1" onClick={() => handleSaveEdit(budget.id)}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ) : (
@@ -227,14 +244,14 @@ export function BudgetPanel() {
                           <span className="font-semibold">{budget.category}</span>
                           {getStatusBadge(percentage)}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => handleStartEdit(budget)}>
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div className="flex items-center gap-0.5">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleStartEdit(budget)}>
+                            <Pencil className="h-3 w-3 text-muted-foreground" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10">
-                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <Trash2 className="h-3 w-3 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -253,39 +270,36 @@ export function BudgetPanel() {
                         </div>
                       </div>
 
-                      {/* Amount Display */}
-                      <div className="flex items-baseline justify-between mb-2">
-                        <div>
-                          <span className="text-2xl font-bold">{formatAmount(spent)}</span>
-                          <span className="text-sm text-muted-foreground ml-1">/ {formatAmount(budget.monthly_limit)}</span>
-                        </div>
-                        <span className="text-lg font-semibold text-muted-foreground">{Math.round(percentage)}%</span>
+                      {/* Amount */}
+                      <div className="mb-2">
+                        <span className="text-xl font-bold">{formatAmount(spent)}</span>
+                        <span className="text-sm text-muted-foreground"> / {formatAmount(budget.monthly_limit)}</span>
                       </div>
 
-                      {/* Progress Bar */}
-                      <div className="relative">
-                        <Progress value={percentage} className="h-2.5 bg-muted" />
+                      {/* Progress */}
+                      <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                         <div 
-                          className={`absolute top-0 left-0 h-2.5 rounded-full transition-all ${getProgressColor(percentage)}`}
+                          className={`absolute top-0 left-0 h-full rounded-full transition-all ${getProgressColor(percentage)}`}
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
 
-                      {/* Remaining/Over */}
+                      {/* Footer */}
                       <div className="flex items-center justify-between mt-2">
-                        <div className={`flex items-center gap-1.5 text-sm ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        <div className={`flex items-center gap-1 text-xs ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                           {remaining < 0 ? (
                             <>
-                              <AlertTriangle className="h-3.5 w-3.5" />
-                              <span>{formatAmount(Math.abs(remaining))} over budget</span>
+                              <AlertTriangle className="h-3 w-3" />
+                              <span>{formatAmount(Math.abs(remaining))} over</span>
                             </>
                           ) : (
                             <>
-                              <TrendingUp className="h-3.5 w-3.5" />
-                              <span>{formatAmount(remaining)} remaining</span>
+                              <TrendingUp className="h-3 w-3" />
+                              <span>{formatAmount(remaining)} left</span>
                             </>
                           )}
                         </div>
+                        <span className="text-xs font-medium">{Math.round(percentage)}%</span>
                       </div>
                     </>
                   )}
@@ -294,18 +308,14 @@ export function BudgetPanel() {
             })}
           </div>
         ) : !isAddingBudget ? (
-          <div className="text-center py-10 px-4">
+          <div className="text-center py-12">
             <div className="mx-auto w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
               <Target className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="font-medium text-foreground">No budgets set</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">
+            <p className="text-sm text-muted-foreground mt-1">
               Add budget limits to track your spending by category
             </p>
-            <Button variant="outline" size="sm" onClick={() => setIsAddingBudget(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create First Budget
-            </Button>
           </div>
         ) : null}
       </CardContent>

@@ -127,19 +127,15 @@ export function ExpensesPage() {
           </Button>
         </div>
 
-        {/* Budget Panel and Expense List */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <ExpenseList
-              expenses={filteredExpenses}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <BudgetPanel />
-          </div>
-        </div>
+        {/* Expense List */}
+        <ExpenseList
+          expenses={filteredExpenses}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        {/* Budget Panel - Full Width at Bottom */}
+        <BudgetPanel />
 
         {/* Expense Form Modal */}
         <ExpenseForm
