@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { TasksChart } from '@/components/analytics/TasksChart';
 import { ExpenseTrendChart } from '@/components/analytics/ExpenseTrendChart';
@@ -10,17 +10,27 @@ import { DataExport } from '@/components/analytics/DataExport';
 import { DateRangeFilter, DateRange } from '@/components/analytics/DateRangeFilter';
 import { PredictiveAnalytics } from '@/components/analytics/PredictiveAnalytics';
 import { AnomalyDetection } from '@/components/analytics/AnomalyDetection';
+import { AdvancedFilters, FilterState, applyFilters } from '@/components/analytics/AdvancedFilters';
+import { PivotTable } from '@/components/analytics/PivotTable';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useSpendingAnalysis } from '@/hooks/useSpendingAnalysis';
 import { Loader2 } from 'lucide-react';
 import { isWithinInterval, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function AnalyticsPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
   const { expenses, isLoading: expensesLoading } = useExpenses();
   const { analysis, isLoading: analysisLoading, analyzeSpending } = useSpendingAnalysis();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  
+  // Advanced filters state
+  const [advancedFilters, setAdvancedFilters] = useState<FilterState>({
+    categories: [],
+    amountRange: [0, 100000],
+    hasNotes: 'all',
+  });
 
   const isLoading = tasksLoading || expensesLoading;
 
@@ -56,7 +66,7 @@ export function AnalyticsPage() {
     });
   }, [tasks, dateRange]);
 
-  const filteredExpenses = useMemo(() => {
+  const dateFilteredExpenses = useMemo(() => {
     if (!dateRange.from && !dateRange.to) return expenses;
     
     return expenses.filter(expense => {
@@ -70,6 +80,27 @@ export function AnalyticsPage() {
       return true;
     });
   }, [expenses, dateRange]);
+
+  // Initialize advanced filters when expenses load
+  useEffect(() => {
+    if (dateFilteredExpenses.length > 0) {
+      const categories = [...new Set(dateFilteredExpenses.map(e => e.category))];
+      const amounts = dateFilteredExpenses.map(e => Number(e.amount));
+      const minAmount = Math.min(...amounts);
+      const maxAmount = Math.max(...amounts);
+      
+      setAdvancedFilters(prev => ({
+        ...prev,
+        categories: prev.categories.length === 0 ? categories : prev.categories,
+        amountRange: [minAmount, maxAmount],
+      }));
+    }
+  }, [dateFilteredExpenses]);
+
+  // Apply advanced filters to expenses
+  const filteredExpenses = useMemo(() => {
+    return applyFilters(dateFilteredExpenses, advancedFilters);
+  }, [dateFilteredExpenses, advancedFilters]);
 
   if (isLoading) {
     return (
@@ -90,39 +121,70 @@ export function AnalyticsPage() {
           <DataExport tasks={filteredTasks} expenses={filteredExpenses} />
         </div>
 
-        {/* Statistical Summary - Data Analyst Focus */}
-        <StatisticalSummary tasks={filteredTasks} expenses={filteredExpenses} />
+        {/* Advanced Filters */}
+        <AdvancedFilters 
+          expenses={dateFilteredExpenses} 
+          filters={advancedFilters} 
+          onFiltersChange={setAdvancedFilters} 
+        />
 
-        {/* AI-Powered Analytics Section */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <PredictiveAnalytics 
-            predictions={analysis?.predictions || null}
-            isLoading={analysisLoading}
-            onAnalyze={analyzeSpending}
-            lastMonthTotal={lastMonthTotal}
-          />
-          <AnomalyDetection 
-            anomalies={analysis?.anomalies || null}
-            insights={analysis?.insights || null}
-            isLoading={analysisLoading}
-            onAnalyze={analyzeSpending}
-          />
-        </div>
+        {/* Data Analysis Tabs */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="pivot">Pivot Analysis</TabsTrigger>
+            <TabsTrigger value="ai">AI Insights</TabsTrigger>
+          </TabsList>
 
-        {/* Monthly Comparison Chart */}
-        <ComparisonChart expenses={expenses} />
+          <TabsContent value="overview" className="space-y-6">
+            {/* Statistical Summary - Data Analyst Focus */}
+            <StatisticalSummary tasks={filteredTasks} expenses={filteredExpenses} />
 
-        {/* Charts Row */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <TasksChart tasks={filteredTasks} />
-          <ExpenseChart expenses={filteredExpenses} />
-        </div>
+            {/* Monthly Comparison Chart */}
+            <ComparisonChart expenses={expenses} />
 
-        {/* Category Breakdown with Pie Charts */}
-        <CategoryBreakdown expenses={filteredExpenses} tasks={filteredTasks} />
+            {/* Charts Row */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              <TasksChart tasks={filteredTasks} />
+              <ExpenseChart expenses={filteredExpenses} />
+            </div>
 
-        {/* Expense Trend */}
-        <ExpenseTrendChart expenses={filteredExpenses} />
+            {/* Category Breakdown with Pie Charts */}
+            <CategoryBreakdown expenses={filteredExpenses} tasks={filteredTasks} />
+
+            {/* Expense Trend */}
+            <ExpenseTrendChart expenses={filteredExpenses} />
+          </TabsContent>
+
+          <TabsContent value="pivot" className="space-y-6">
+            {/* Pivot Table for Data Analysis */}
+            <PivotTable expenses={filteredExpenses} />
+            
+            {/* Category Breakdown below pivot */}
+            <CategoryBreakdown expenses={filteredExpenses} tasks={filteredTasks} />
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6">
+            {/* AI-Powered Analytics Section */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              <PredictiveAnalytics 
+                predictions={analysis?.predictions || null}
+                isLoading={analysisLoading}
+                onAnalyze={analyzeSpending}
+                lastMonthTotal={lastMonthTotal}
+              />
+              <AnomalyDetection 
+                anomalies={analysis?.anomalies || null}
+                insights={analysis?.insights || null}
+                isLoading={analysisLoading}
+                onAnalyze={analyzeSpending}
+              />
+            </div>
+
+            {/* Statistical Summary for context */}
+            <StatisticalSummary tasks={filteredTasks} expenses={filteredExpenses} />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
