@@ -8,17 +8,36 @@ import { ComparisonChart } from '@/components/analytics/ComparisonChart';
 import { CategoryBreakdown } from '@/components/analytics/CategoryBreakdown';
 import { DataExport } from '@/components/analytics/DataExport';
 import { DateRangeFilter, DateRange } from '@/components/analytics/DateRangeFilter';
+import { PredictiveAnalytics } from '@/components/analytics/PredictiveAnalytics';
+import { AnomalyDetection } from '@/components/analytics/AnomalyDetection';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useSpendingAnalysis } from '@/hooks/useSpendingAnalysis';
 import { Loader2 } from 'lucide-react';
-import { isWithinInterval, parseISO } from 'date-fns';
+import { isWithinInterval, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 export function AnalyticsPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
   const { expenses, isLoading: expensesLoading } = useExpenses();
+  const { analysis, isLoading: analysisLoading, analyzeSpending } = useSpendingAnalysis();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   const isLoading = tasksLoading || expensesLoading;
+
+  // Calculate last month's total for predictions comparison
+  const lastMonthTotal = useMemo(() => {
+    const now = new Date();
+    const lastMonth = subMonths(now, 1);
+    const start = startOfMonth(lastMonth);
+    const end = endOfMonth(lastMonth);
+    
+    return expenses
+      .filter(e => {
+        const date = parseISO(e.date);
+        return isWithinInterval(date, { start, end });
+      })
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+  }, [expenses]);
 
   // Filter data by date range
   const filteredTasks = useMemo(() => {
@@ -73,6 +92,22 @@ export function AnalyticsPage() {
 
         {/* Statistical Summary - Data Analyst Focus */}
         <StatisticalSummary tasks={filteredTasks} expenses={filteredExpenses} />
+
+        {/* AI-Powered Analytics Section */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <PredictiveAnalytics 
+            predictions={analysis?.predictions || null}
+            isLoading={analysisLoading}
+            onAnalyze={analyzeSpending}
+            lastMonthTotal={lastMonthTotal}
+          />
+          <AnomalyDetection 
+            anomalies={analysis?.anomalies || null}
+            insights={analysis?.insights || null}
+            isLoading={analysisLoading}
+            onAnalyze={analyzeSpending}
+          />
+        </div>
 
         {/* Monthly Comparison Chart */}
         <ComparisonChart expenses={expenses} />
