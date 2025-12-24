@@ -20,7 +20,6 @@ import {
   Moon, 
   Sun, 
   Monitor, 
-  DollarSign,
   IndianRupee,
   Download,
   FileText,
@@ -34,7 +33,7 @@ export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
-  const { currency, setCurrency, formatAmount } = useCurrency();
+  const { formatAmount } = useCurrency();
   const { expenses } = useExpenses();
   
   // Profile state
@@ -275,10 +274,6 @@ export function SettingsPage() {
     { value: 'system', label: 'System', icon: Monitor },
   ] as const;
 
-  const currencyOptions = [
-    { value: 'INR', label: 'Indian Rupee (₹)', icon: IndianRupee },
-    { value: 'USD', label: 'US Dollar ($)', icon: DollarSign },
-  ] as const;
 
   return (
     <Layout title="Settings" subtitle="Manage your account preferences">
@@ -423,39 +418,6 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Currency Settings */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <IndianRupee className="h-5 w-5 text-primary" />
-              Currency Settings
-            </CardTitle>
-            <CardDescription>Set your preferred currency for expense display</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              {currencyOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setCurrency(option.value)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-200",
-                    currency === option.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-card hover:border-primary/50"
-                  )}
-                >
-                  <option.icon className="h-5 w-5" />
-                  <span className="font-medium">{option.label}</span>
-                  {currency === option.value && <Check className="h-4 w-4" />}
-                </button>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              Example: {formatAmount(1234.56)}
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Budget Settings */}
         <BudgetSettings />
