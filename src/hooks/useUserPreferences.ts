@@ -68,19 +68,18 @@ export function useUserPreferences() {
     enabled: !!user,
     // Use stale data while revalidating for faster UI
     staleTime: 1000 * 60 * 5, // 5 minutes
-    // Provide initial data from cache
-    placeholderData: () => {
-      const cachedCurrency = getCachedCurrency();
-      return {
-        id: '',
-        user_id: user?.id || '',
-        theme: 'dark' as Theme,
-        currency: cachedCurrency,
-        created_at: '',
-        updated_at: '',
-      };
-    },
   });
+  
+  // Provide cached values while loading
+  const cachedCurrency = getCachedCurrency();
+  const effectivePreferences = preferences ?? {
+    id: '',
+    user_id: user?.id || '',
+    theme: 'dark' as Theme,
+    currency: cachedCurrency,
+    created_at: '',
+    updated_at: '',
+  };
 
   // Sync cache when preferences change
   useEffect(() => {
@@ -134,7 +133,7 @@ export function useUserPreferences() {
   });
 
   return {
-    preferences,
+    preferences: effectivePreferences,
     isLoading,
     error,
     updatePreferences: updatePreferences.mutate,
