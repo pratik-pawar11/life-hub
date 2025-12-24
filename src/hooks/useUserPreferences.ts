@@ -76,17 +76,41 @@ export function useUserPreferences() {
   };
 }
 
-// Currency formatting utility
-export function formatCurrency(amount: number, currency: Currency = 'INR'): string {
+// Currency conversion rates (base currency is INR)
+// In a production app, you'd fetch these from an API
+export const CONVERSION_RATES: Record<Currency, number> = {
+  INR: 1,
+  USD: 0.012, // 1 INR = 0.012 USD (approximately)
+};
+
+// Currency formatting utility with conversion
+export function formatCurrency(amount: number, currency: Currency = 'INR', baseCurrency: Currency = 'INR'): string {
   const symbols = {
     INR: '₹',
     USD: '$',
   };
+  
+  // Convert amount from base currency to target currency
+  let convertedAmount = amount;
+  if (baseCurrency !== currency) {
+    // First convert to INR (base), then to target currency
+    const amountInINR = amount / CONVERSION_RATES[baseCurrency];
+    convertedAmount = amountInINR * CONVERSION_RATES[currency];
+  }
   
   const formatter = new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
   
-  return `${symbols[currency]}${formatter.format(amount)}`;
+  return `${symbols[currency]}${formatter.format(convertedAmount)}`;
+}
+
+// Convert amount between currencies
+export function convertCurrency(amount: number, fromCurrency: Currency, toCurrency: Currency): number {
+  if (fromCurrency === toCurrency) return amount;
+  
+  // Convert to INR first, then to target
+  const amountInINR = amount / CONVERSION_RATES[fromCurrency];
+  return amountInINR * CONVERSION_RATES[toCurrency];
 }
