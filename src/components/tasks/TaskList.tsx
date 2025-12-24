@@ -1,15 +1,14 @@
-import { Task } from '@/hooks/useTasks';
-import { statusColors, statusLabels } from '@/lib/data';
+import { Task, TaskStatus } from '@/types';
+import { statusColors, statusLabels, priorityColors, priorityLabels, taskCategoryColors } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { Calendar, Trash2, Edit2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Calendar, Archive, Edit2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TaskStatus } from '@/types';
-import { differenceInDays, differenceInHours, differenceInMinutes, isPast, isToday, isTomorrow } from 'date-fns';
+import { differenceInDays, isPast, isToday, isTomorrow } from 'date-fns';
 
 interface TaskListProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
   onStatusChange: (id: string, status: TaskStatus) => void;
 }
 
@@ -42,7 +41,7 @@ function getTimeRemaining(dueDate: string) {
   return { text: `${days} days left`, status: 'normal' as const };
 }
 
-export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListProps) {
+export function TaskList({ tasks, onEdit, onArchive, onStatusChange }: TaskListProps) {
   const getNextStatus = (currentStatus: TaskStatus): TaskStatus => {
     return currentStatus === 'pending' ? 'completed' : 'pending';
   };
@@ -77,18 +76,28 @@ export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListPr
               </button>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className={cn(
                     "font-medium text-foreground",
                     task.status === 'completed' && "line-through text-muted-foreground"
                   )}>
                     {task.title}
                   </h3>
+                  
+                  {/* Priority badge */}
                   <span className={cn(
                     "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-                    statusColors[task.status]
+                    priorityColors[task.priority]
                   )}>
-                    {statusLabels[task.status]}
+                    {priorityLabels[task.priority]}
+                  </span>
+                  
+                  {/* Category badge */}
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    taskCategoryColors[task.category]
+                  )}>
+                    {task.category}
                   </span>
                 </div>
                 
@@ -108,6 +117,7 @@ export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListPr
                           day: 'numeric',
                           year: 'numeric'
                         })}
+                        {task.due_time && ` at ${task.due_time.slice(0, 5)}`}
                       </span>
                     </div>
                     
@@ -145,10 +155,11 @@ export function TaskList({ tasks, onEdit, onDelete, onStatusChange }: TaskListPr
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onDelete(task.id)}
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => onArchive(task.id)}
+                  className="h-8 w-8 text-muted-foreground hover:text-muted-foreground/80"
+                  title="Archive task"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Archive className="h-4 w-4" />
                 </Button>
               </div>
             </div>
