@@ -1,14 +1,25 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useUserPreferences, Theme } from '@/hooks/useUserPreferences';
+
+export type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
   resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
-  isLoading: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const THEME_STORAGE_KEY = 'app-theme';
+
+function getStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark';
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    return stored;
+  }
+  return 'dark';
+}
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window !== 'undefined') {
@@ -18,10 +29,8 @@ function getSystemTheme(): 'light' | 'dark' {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { preferences, updatePreferences, isLoading } = useUserPreferences();
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
-  
-  const theme = preferences?.theme || 'dark';
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -60,11 +69,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
-    updatePreferences({ theme: newTheme });
+    setThemeState(newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, isLoading }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
