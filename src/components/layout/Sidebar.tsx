@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  CheckSquare, 
-  Wallet, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  CheckSquare,
+  Wallet,
+  BarChart3,
   Settings,
-  Sparkles
+  Sparkles,
+  Kanban,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SidebarQuickSettings } from './SidebarQuickSettings';
@@ -13,6 +14,7 @@ import { SidebarQuickSettings } from './SidebarQuickSettings';
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Work', href: '/work', icon: Kanban },
   { name: 'Expenses', href: '/expenses', icon: Wallet },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
