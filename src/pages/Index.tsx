@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Dashboard } from './Dashboard';
 import { TasksPage } from './Tasks';
+import { WorkPage } from './Work';
 import { ExpensesPage } from './Expenses';
 import { AnalyticsPage } from './Analytics';
 import { SettingsPage } from './Settings';
